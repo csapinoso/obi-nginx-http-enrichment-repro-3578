@@ -46,16 +46,36 @@ jobs:
           go-version: "1.23.x"
           cache-dependency-path: go.mod
       - name: Sign-off gate (parse fallback + missing Authorization on /)
+        id: signoff
         env:
           REQUIRE_EBPF_FALLBACK: "1"
           KEEP_COMPOSE_ON_FAILURE: "1"
-          COMPOSE_FILES: "-f docker-compose.yml -f docker-compose.openresty.yml"
+          COMPOSE_FILES: "-f docker-compose.yml -f docker-compose.openresty.yml -f docker-compose.terranova-buffers.yml"
         run: ./run-repro.sh
+      - name: Sign-off summary
+        if: always()
+        run: |
+          {
+            echo "## ebpf-repro-signoff (#3578 maintainer bar)"
+            echo ""
+            if [[ "${{ steps.signoff.outcome }}" == "success" ]]; then
+              echo "Parse fallback DEBUG **and** missing \`Authorization\` on \`GET /\` — compose repro matches cluster."
+            else
+              echo "**Expected until compose parity:** stock v0.11.0 still completes full HTTP parse on \`GET /\` in this stack."
+              echo ""
+              echo "| Check (last run) | Meaning |"
+              echo "|------------------|---------|"
+              echo "| \`authorization on span: yes\` + \`OBI fallback: no\` | Happy path — enrichment works (not the #3578 failure mode) |"
+              echo "| \`OBI fallback: yes\` + \`authorization: no\` | **Target** — same as dev www-web capture |"
+              echo ""
+              echo "Evidence without compose: \`fixtures/\` + \`go run ./cmd/parse-buffer-lab\`. Artifact: \`repro-3578-compose-logs\`."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Capture compose logs on failure
         if: failure()
         run: |
           mkdir -p ci-logs
-          DC="docker compose -f docker-compose.yml -f docker-compose.openresty.yml"
+          DC="docker compose -f docker-compose.yml -f docker-compose.openresty.yml -f docker-compose.terranova-buffers.yml"
           $DC logs > ci-logs/compose.log 2>&1 || true
           $DC logs obi 2>&1 | tail -200 > ci-logs/obi-tail.log || true
       - name: Upload CI logs
@@ -68,4 +88,4 @@ jobs:
       - name: Tear down compose
         if: always()
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.openresty.yml down -v || true
+          docker compose -f docker-compose.yml -f docker-compose.openresty.yml -f docker-compose.terranova-buffers.yml down -v || true

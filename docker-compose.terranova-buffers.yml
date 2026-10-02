@@ -1,0 +1,6 @@
+# Sign-off / cluster parity: Terranova 16×16k (may 502 large bodies; targets OBI buffer stitching).
+services:
+  nginx:
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./nginx/proxy-buffers-terranova.conf:/etc/nginx/proxy-buffers.conf:ro

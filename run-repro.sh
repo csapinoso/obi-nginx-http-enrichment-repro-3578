@@ -162,7 +162,8 @@ if [[ "$has_fallback" -eq 0 ]] && [[ "$root_auth" -eq 0 ]]; then
 fi
 
 echo "NOTE: eBPF/nginx did not emit parse fallback on this run (see REPRO_STATUS.md)."
-echo "      Set REQUIRE_EBPF_FALLBACK=1 to fail until DEBUG fallback is reproduced."
+echo "      Observed: Authorization on / spans=$([[ $root_auth -eq 1 ]] && echo yes || echo no), OBI fallback=$([[ $has_fallback -eq 1 ]] && echo yes || echo no)."
+echo "      Cluster failure mode needs fallback=yes and authorization=no (fixtures/obi-parse-debug-sample-line.sanitized.txt)."
 if [[ "$REQUIRE_EBPF_FALLBACK" == "1" ]]; then
   exit 1
 fi
