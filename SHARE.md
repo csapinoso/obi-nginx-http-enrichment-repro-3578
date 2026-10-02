@@ -1,32 +1,45 @@
 # Sending this repro to OBI maintainers
 
+**#1 (capture + fixtures) is OK to send now.** **#2 (compose/CI eBPF repro)** is WIP — see [REPRO_STATUS.md](./REPRO_STATUS.md) and [docs/LINUX_REPRO_OPTIONS.md](./docs/LINUX_REPRO_OPTIONS.md).
+
+Verify offline package:
+
+```bash
+./scripts/verify-fixtures-package.sh
+go run ./cmd/parse-buffer-lab
+```
+
 Suggested GitHub comment on [#3578](https://github.com/open-telemetry/opentelemetry-ebpf-instrumentation/issues/3578):
 
 ---
 
-Thanks for the docker-compose / HTTP/1.1 guidance. We packaged a **standalone repro** (no vendor-specific config):
+@mmat11 — repro package for the parse-fallback + missing Authorization path on nginx/openresty **server** spans (stock **v0.11.0**).
 
-**Contents:** nginx 1.26 → Go upstream, stock OBI **v0.11.0** sidecar (`pid: nginx`), otel-collector debug exporter, enrichment config aligned with `http-header-enrichment-demo`.
+**A. eBPF evidence (scripted capture + fixtures)**
 
-**Run:**
+- `./scripts/capture-from-dev.sh` — re-run on our cluster when we temporarily pin stock v0.11.0 + `log_level: debug`.
+- Committed **`fixtures/`** from 2026-10-02: ingress **HTTP/1.1** traffic to openresty `GET /` (~402 KiB HTML, Terranova-style proxy buffers). DEBUG shows `reqErr=<nil>` and response-side `respErr` e.g. `malformed MIME header: missing colon: "00550"` (same family as `"0"` in your comment). See `obi-parse-debug-sample-line.sanitized.txt`.
+- **Note:** grep the **cluster-wide** OBI logs after ingress traffic; co-located OBI on the www-web node often shows **zero** fallback lines.
+
+**B. Parser step (deterministic, no cluster)**
+
+```bash
+go run ./cmd/parse-buffer-lab
+```
+
+Same `httpSafeParseResponse` / `http.ReadResponse` failures as the DEBUG `respErr` strings.
+
+**C. docker-compose (WIP for full eBPF trigger)**
 
 ```bash
 ./run-repro.sh
+REQUIRE_EBPF_FALLBACK=1 ./run-repro.sh   # intended sign-off on Linux CI
 ```
 
-**Routes exercised:**
+We have not yet made compose reliably hit the fallback path; tracking on Ubuntu GHA + openresty/hostpid tweaks.
 
-- `/small` — small JSON (control-style path)
-- `/unbuffered/large` — 16 KiB body, `proxy_buffering off`
-- `/unbuffered/chunked` — chunked response, unbuffered
-- `/html` — HTML + cookies
-
-The script prints OBI DEBUG lines (`missing large buffer`, `falling back to manual HTTP info parsing`) and whether `http.request.header.authorization` appears on nginx server spans per route.
-
-On Docker Desktop we consistently see enrichment on all routes (no fallback DEBUG yet). On our Kubernetes nginx/openresty workloads we see parse fallback and missing Authorization on server spans with the same agent config — we're still aligning upstream response shape with this compose stack.
-
-Happy to PR this under `examples/` if you want it in-tree.
+Happy to PR under `examples/` once **C** is green on Linux.
 
 ---
 
-Attach **zip** or link to a public repo/gist.
+Attach zip (`obi-nginx-http-enrichment-repro-3578.zip`) or public repo link.

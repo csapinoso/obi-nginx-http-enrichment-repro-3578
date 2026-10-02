@@ -4,7 +4,13 @@ Minimal **docker-compose** repro for [opentelemetry-ebpf-instrumentation#3578](h
 
 stock **OpenTelemetry eBPF Instrumentation (OBI) v0.11.0** with HTTP header enrichment enabled, **nginx** as HTTP/1.1 reverse proxy, and an optional upstream that can trigger **legacy parse path** behavior (missing response large buffer or response parse fallback).
 
-Maintainer request: **docker-compose**, **HTTP/1.1**, investigate response buffers / parse — not legacy-path enrichment patches.
+Maintainer request: **docker-compose**, **HTTP/1.1**, and a script that triggers the same **parse fallback** DEBUG as in [#3578 comment 5931550365](https://github.com/open-telemetry/opentelemetry-ebpf-instrumentation/issues/3578#issuecomment-5931550365).
+
+**Read [REPRO_STATUS.md](./REPRO_STATUS.md)** — the eBPF/nginx failure is **not** reliably reproduced in compose yet; do not send this to maintainers as “done” without that file’s checklist.
+
+**Dev capture (#1):** [scripts/capture-from-dev.sh](./scripts/capture-from-dev.sh) → [fixtures/](./fixtures/README.md). Offline check: `./scripts/verify-fixtures-package.sh`.
+
+**Linux repro (#2):** on Linux, `run-repro.sh` uses **openresty + hostpid** overlays; CI: [`.github/workflows/repro-3578.yml`](./.github/workflows/repro-3578.yml). Details: [docs/LINUX_REPRO_OPTIONS.md](./docs/LINUX_REPRO_OPTIONS.md).
 
 ## Requirements
 
@@ -20,10 +26,12 @@ On Docker Desktop (macOS/Windows), OBI needs:
 ## Quick start
 
 ```bash
-./run-repro.sh
+go run ./cmd/parse-buffer-lab   # deterministic: same respErr strings as OBI DEBUG
+./run-repro.sh                  # full nginx + OBI stack (fallback not guaranteed)
+REQUIRE_EBPF_FALLBACK=1 ./run-repro.sh   # exits 1 until DEBUG fallback appears
 ```
 
-This builds the stack, waits for OBI to attach to nginx, sends authenticated traffic on several routes, and prints:
+`run-repro.sh` builds the stack, waits for OBI to attach to nginx, sends authenticated traffic on several routes, and prints:
 
 - OBI DEBUG lines (`missing large buffer`, `falling back to manual HTTP info parsing`)
 - Whether the OpenTelemetry Collector debug exporter saw `http.request.header.authorization` on nginx **server** spans per route

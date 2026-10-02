@@ -1,0 +1,3 @@
+# Co-located otel-obi on www-web node (otel-obi-rrt89) during same window — often empty
+# Parse fallback for ingress traffic was observed on a different node pod (otel-obi-gr9rg).
+# Always compare with obi-parse-debug-cluster.sanitized.txt after capture-from-dev.sh

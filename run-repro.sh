@@ -4,16 +4,44 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
+echo "==> Part 1: response parse failures (same respErr family as #3578 DEBUG)"
+if command -v go >/dev/null 2>&1; then
+  go run ./cmd/parse-buffer-lab
+else
+  echo "WARN: install Go to run ./cmd/parse-buffer-lab (deterministic parser repro)"
+fi
+echo ""
+
 COMPOSE="${COMPOSE:-docker compose}"
+if [[ -z "${COMPOSE_FILES:-}" ]]; then
+  if [[ "$(uname -s)" == Linux ]]; then
+    COMPOSE_FILES="-f docker-compose.yml -f docker-compose.openresty.yml -f docker-compose.hostpid.yml"
+  else
+    COMPOSE_FILES="-f docker-compose.yml"
+  fi
+fi
+COMPOSE_ARGS=( $COMPOSE $COMPOSE_FILES )
 AUTH="repro-3578-$(date +%s)"
+REQUIRE_EBPF_FALLBACK="${REQUIRE_EBPF_FALLBACK:-0}"
 
 cleanup() {
-  $COMPOSE down -v >/dev/null 2>&1 || true
+  "${COMPOSE_ARGS[@]}" down -v >/dev/null 2>&1 || true
 }
-trap cleanup EXIT
+on_exit() {
+  local code=$?
+  if [[ "$code" -ne 0 ]] && [[ "${KEEP_COMPOSE_ON_FAILURE:-0}" == "1" ]]; then
+    echo "Keeping stack up for log capture (exit $code)." >&2
+    exit "$code"
+  fi
+  cleanup
+  exit "$code"
+}
+trap on_exit EXIT
+
+echo "==> Compose: ${COMPOSE_ARGS[*]}"
 
 echo "==> Starting stack"
-$COMPOSE up --build -d
+"${COMPOSE_ARGS[@]}" up --build -d
 
 echo "==> Waiting for nginx"
 for _ in $(seq 1 45); do
@@ -26,7 +54,7 @@ done
 echo "==> Waiting for OBI to attach to nginx"
 ready=0
 for _ in $(seq 1 90); do
-  logs=$($COMPOSE logs obi 2>&1 || true)
+  logs=$("${COMPOSE_ARGS[@]}" logs obi 2>&1 || true)
   if printf '%s\n' "$logs" | grep -q 'instrumenting process' \
     && printf '%s\n' "$logs" | grep -q 'Enabling trace information parsing'; then
     ready=1
@@ -36,28 +64,36 @@ for _ in $(seq 1 90); do
 done
 if [[ "$ready" -ne 1 ]]; then
   echo "FAIL: OBI did not attach to nginx" >&2
-  $COMPOSE logs obi | tail -40
+  "${COMPOSE_ARGS[@]}" logs obi | tail -40
   exit 1
 fi
 sleep 5
 
-ROUTES=(
+PRIMARY_ROUTES=(
+  "http://127.0.0.1:8080/"
+  "http://127.0.0.1:8080/appshell-like"
+)
+EXTRA_ROUTES=(
   "http://127.0.0.1:8080/small"
   "http://127.0.0.1:8080/unbuffered/large"
-  "http://127.0.0.1:8080/unbuffered/chunked"
-  "http://127.0.0.1:8080/html"
 )
 
 echo "==> Generating traffic (Authorization on every request)"
 export AUTH_TOKEN="$AUTH"
-for url in "${ROUTES[@]}"; do
-  bash "$ROOT/scripts/traffic.sh" "$url" 12
+for url in "${PRIMARY_ROUTES[@]}"; do
+  bash "$ROOT/scripts/traffic.sh" "$url" 24
   sleep 2
 done
+if [[ "$REQUIRE_EBPF_FALLBACK" != "1" ]]; then
+  for url in "${EXTRA_ROUTES[@]}"; do
+    bash "$ROOT/scripts/traffic.sh" "$url" 12
+    sleep 2
+  done
+fi
 sleep 12
 
-OBI_LOGS=$($COMPOSE logs obi 2>&1 || true)
-COLL_LOGS=$($COMPOSE logs otel-collector 2>&1 || true)
+OBI_LOGS=$("${COMPOSE_ARGS[@]}" logs obi 2>&1 || true)
+COLL_LOGS=$("${COMPOSE_ARGS[@]}" logs otel-collector 2>&1 || true)
 
 echo ""
 echo "==> OBI parse-path signals (sanitized)"
@@ -83,37 +119,40 @@ span_has_auth_for_path() {
   '
 }
 
-small_auth=0
-large_auth=0
-if span_has_auth_for_path "/small"; then small_auth=1; fi
-if span_has_auth_for_path "/unbuffered/large"; then large_auth=1; fi
+root_auth=0
+if span_has_auth_for_path "/"; then root_auth=1; fi
 
 echo ""
 echo "==> Span enrichment check (collector debug exporter)"
-echo "    /small                  authorization on span: $([[ $small_auth -eq 1 ]] && echo yes || echo no)"
-echo "    /unbuffered/large       authorization on span: $([[ $large_auth -eq 1 ]] && echo yes || echo no)"
+echo "    / (appshell-like)       authorization on span: $([[ $root_auth -eq 1 ]] && echo yes || echo no)"
 echo "    OBI fallback/buffer log: $([[ $has_fallback -eq 1 ]] && echo yes || echo no)"
 
 echo ""
-if [[ "$has_fallback" -eq 1 ]] && [[ "$small_auth" -eq 1 ]] && [[ "$large_auth" -eq 0 ]]; then
-  echo "PASS: Repro shows legacy parse/buffer path on unbuffered large traffic and enrichment on /small."
-  echo "      Share this directory (or zip) with maintainers — see README.md."
+# Maintainer bar (#3578): DEBUG parse fallback on nginx/openresty server path and no Authorization on / spans.
+if [[ "$has_fallback" -eq 1 ]] && [[ "$root_auth" -eq 0 ]]; then
+  echo "PASS: Parse fallback DEBUG + missing Authorization on GET / (matches cluster failure mode)."
   exit 0
 fi
 
-if [[ "$has_fallback" -eq 1 ]]; then
-  echo "PARTIAL: OBI logged fallback/buffer issues; span diff may vary by kernel/Docker."
-  echo "         Inspect: docker compose logs obi | rg -i 'falling back|missing large'"
+if [[ "$has_fallback" -eq 1 ]] && [[ "$root_auth" -eq 1 ]]; then
+  echo "PARTIAL: OBI logged fallback but Authorization still present on / spans (inspect buffer stitching)."
+  if [[ "$REQUIRE_EBPF_FALLBACK" == "1" ]]; then
+    exit 1
+  fi
   exit 0
 fi
 
-if [[ "$small_auth" -eq 1 ]] && [[ "$large_auth" -eq 0 ]]; then
-  echo "PARTIAL: Authorization missing on /unbuffered/large spans but no fallback DEBUG line yet."
-  echo "         Still useful for #3578 — attach collector + OBI log excerpts."
+if [[ "$has_fallback" -eq 0 ]] && [[ "$root_auth" -eq 0 ]]; then
+  echo "PARTIAL: No Authorization on / but no fallback DEBUG line (legacy path without logged parse error?)."
+  if [[ "$REQUIRE_EBPF_FALLBACK" == "1" ]]; then
+    exit 1
+  fi
   exit 0
 fi
 
-echo "NOTE: On this host all probed routes behaved the same (often: enrichment on every route)."
-echo "      Try Linux bare metal or tune upstream ( /large?kb=32 ) and proxy_buffering."
-echo "      Stack is valid for maintainers to iterate — see README.md."
+echo "NOTE: eBPF/nginx did not emit parse fallback on this run (see REPRO_STATUS.md)."
+echo "      Set REQUIRE_EBPF_FALLBACK=1 to fail until DEBUG fallback is reproduced."
+if [[ "$REQUIRE_EBPF_FALLBACK" == "1" ]]; then
+  exit 1
+fi
 exit 0

@@ -1,0 +1,60 @@
+*   Trying 127.0.0.1:80...
+* Connected to 127.0.0.1 (127.0.0.1) port 80 (#0)
+> GET / HTTP/1.1
+> Host: 127.0.0.1
+> User-Agent: curl/7.81.0
+> Accept: */*
+> Authorization: Bearer <redacted>
+> 
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Server: openresty
+< Date: Fri, 02 Oct 2026 19:47:33 GMT
+< Content-Type: text/html; charset=utf-8
+< Content-Length: 401965
+< Connection: keep-alive
+< Vary: Accept-Encoding
+< accept-ch: Sec-CH-Viewport-Width
+< critical-ch: Sec-CH-Viewport-Width
+< Vary: Sec-CH-Viewport-Width, Accept-Encoding
+< x-middleware-rewrite: /
+< Set-Cookie: ptv_jwt_refresh=28800; Path=/; SameSite=Lax
+< Set-Cookie: ptv_device_id=0baa56a2-0069-4024-9d77-61926950c178; Max-Age=34560000; Path=/; SameSite=Lax
+< Set-Cookie: ptv_session_id=85b5110b-f8d8-4d22-8cb0-b7e045526508; Path=/; SameSite=Lax
+< Set-Cookie: CBS_COM=ODJFRkVCQjNGNDQzOTBCN0Y3MjQxQTIyMEYxNEY4OUU3OTk0NTA1NDJFREI2NUQxQUU5MzkxRjQzM0MxNEQ3NjBEQkI0MEZFNTA2NThBRkYxMzBERDM2N0E1NDc1OEU5ODI3MTBBRjRDQzYzQkYxNEIyMzE1MTQwNkEzOEFBNzJFOTBCMEExNzZCREU4N0ZFQkE2NTA4QkJENDZEOEVEQUJDNjc3MDJCOUI4MTc4MTI2RDBFMTg3ODk5Q0Q5NkVEOjE4MjI1MDY0NDYxMzU6YzJiNGRkMjI4Y2U0NDNjZjlkMjc5MDQzYzc0MDA3YmU6My4wOjA; Max-Age=31536000; Path=/; SameSite=Lax
+< Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+< ETag: "7g4po7tlm28m2d"
+< 
+{ [31727 bytes data]
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Pluto TV: Watch Free Movies, TV Shows &amp; Live TV Online</title><meta name="description" content="Watch your choice of free hit movies, free binge-worthy TV shows &amp; live TV online, anytime. Stream Now. Pay Never."/><meta property="og:title" content="Pluto TV: Watch Free Movies, TV Shows &amp; Live TV Online"/><meta property="og:description" content="Watch your choice of free hit movies, free binge-worthy TV shows &amp; live TV online, anytime. Stream Now. Pay Never."/><meta property="og:image" content="https://wwwimage-us.plutostatic.tv/base/files/asset/new-ptv-social-image/au/us-en/pluto-tv-social-jpg_1920x1080.jpg"/><meta property="og:image:secure_url" content="https://wwwimage-us.plutostatic.tv/base/files/asset/new-ptv-social-image/au/us-en/pluto-tv-social-jpg_1920x1080.jpg"/><meta property="og:url" content="https://pluto.tv/"/><meta name="twitter:title" content="Pluto TV: Watch Free Movies, TV Shows &amp; Live TV Online"/><meta name="twitter:description" content="Watch your choice of free hit movies, free binge-worthy TV shows &amp; live TV online, anytime. Stream Now. Pay Never."/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:image" content="https://wwwimage-us.plutostatic.tv/base/files/asset/new-ptv-social-image/au/us-en/pluto-tv-social-jpg_1920x1080.jpg"/><link rel="canonical" href="https://pluto.tv/"/><meta name="next-head-count" content="14"/><link rel="preload" href="/_next/static/media/PlutoTVSansV11-Bold.b02fda9c.woff2" as="font" type="font/woff2" crossorigin="anonymous"/><link rel="preload" href="/_next/static/media/PlutoTVSansV11-SemiBold.de6f2280.woff2" as="font" type="font/woff2" crossorigin="anonymous"/><link rel="preload" href="/_next/static/media/PlutoTVSansV11-Medium.7c79c72f.woff2" as="font" type="font/woff2" crossorigin="anonymous"/><link rel="preload" href="/_next/static/media/PlutoTVSansV11-Regular.f5d54128.woff2" as="font" type="font/woff2" crossorigin="anonymous"/><link rel="preconnect" href="https://global.ketchcdn.com"/><link rel="dns-prefetch" href="https://global.ketchcdn.com"/><link rel="preconnect" href="https://cdn.privacy.paramount.com"/><link rel="dns-prefetch" href="https://cdn.privacy.paramount.com"/><script>(function(){var v="test";Object.defineProperty(window,"__CURRENT_ENV__",{value:v,writable:false,configurable:false,enumerable:true});Object.defineProperty(window,"__APP_DEBUG__",{value:true,writable:false,configurable:false,enumerable:true});})();</script><script>(function(){var v="10.12.66";Object.defineProperty(window,"__TN_APP_VERSION__",{value:v,writable:false,configurable:false,enumerable:true});})();</script><link rel="icon" href="/favicon/regular.png"/><link rel="shortcut icon" href="/favicon/regular.png"/><link rel="apple-touch-icon" href="/favicon/large.png"/><link rel="apple-touch-icon-precomposed" href="/favicon/large.png"/><link rel="manifest" href="/api/manifest/"/><meta name="robots" content="max-image-preview:large"/><meta name="app_version" content="10.12.66"/><meta property="og:site_name" content="Pluto TV"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:site" content="@PlutoTV"/><meta name="twitter:creator" content="@PlutoTV"/><meta http-equiv="Content-Language" content="en"/><meta property="og:type" content="website"/><meta name="application-name" content=""/><meta name="" content="App"/><script src="/scripts/tn/dit.svc.datahub.js?v=26.08.04"></script><script src="/scripts/tn/adobe-client-data-layer.min.js?v=1" async="" defer=""></script><script type="text/javascript">
+        !function(){
+            window.semaphore=window.semaphore||[];
+            window.ketch=function(){
+                window.semaphore.push(arguments)
+            };
+            var e=document.createElement("script");
+            e.type="text/javascript";
+            e.src="https://global.ketchcdn.com/web/v3/config/pluto/pluto_web/boot.js";
+            e.crossOrigin="anonymous";
+            e.defer=e.async=!0;
+            document.getElementsByTagName("head")[0].appendChild(e)
+        }();
+    </script><script type="text/javascript">
+    (function(a){
+        var w=window,b='cbsoptanon',q='cmd',r='config';
+        w[b]=w[b]?w[b]:{};
+        w[b][q]=w[b][q]?w[b][q]:[];
+        w[b][r]=w[b][r]?w[b][r]:[];
+        a.forEach(function(z){
+            w[b][z]=w[b][z]||function(){
+                var c=arguments;
+                w[b][q].push(function(){
+                    w[b][z].apply(w[b],c);
+                });
+            };
+        });
+    })(['onScriptsReady','onAdsReady']);
+    window.cbsoptanon.config.push({setNpaOnConsentChange:true});
+</script><script src="//cdn.privacy.paramount.com/dist/optanon-v2.0.0.js" type="text/javascript" async="" crossorigin="anonymous"></script><style>
+
+        #redfast-app {

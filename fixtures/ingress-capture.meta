@@ -1,0 +1,11 @@
+ingress_capture 2026-10-02T19:54:36Z token=pro-11748-ingress-1790970876
+=== curl -sv https://www-web-pluto-us-test-www.gcp-dev-use1.pluto.tv/ (first 40 lines) ===
+=== curl -sv https://test-www.pluto.tv/ (first 40 lines) ===
+fallback_line_count=0
+0
+http11_ingress 2026-10-02T19:57:10Z token=pro-11748-h1-1790971030
+http11_fallback_lines=0
+cluster_wide_http11_burst 2026-10-02T19:58:35Z token=pro-11748-h1-cluster-*
+# Parse fallback found on otel-obi-gr9rg (node 01bb58fd-qtsx), not on co-located otel-obi-rrt89 (www-web node 47p8).
+# Use cluster-wide log grep after ingress traffic, or pin www-web to one node for single-pod grep.
+obi-parse-debug-ingress-http11.sanitized.txt updated with sample lines from otel-obi-gr9rg

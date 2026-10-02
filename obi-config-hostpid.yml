@@ -6,7 +6,7 @@ prometheus_export:
 otel_metrics_export:
   endpoint: ""
 otel_traces_export:
-  endpoint: http://otel-collector:4317
+  endpoint: http://127.0.0.1:4317
   instrumentations:
     - http
 discovery:

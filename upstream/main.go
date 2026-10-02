@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -18,9 +19,14 @@ func main() {
 	mux.HandleFunc("/large", handleLarge)
 	mux.HandleFunc("/chunked", handleChunked)
 	mux.HandleFunc("/html", handleHTML)
-	mux.HandleFunc("/", handleSmall)
+	mux.HandleFunc("/appshell-like", handleAppshellLike)
+	mux.HandleFunc("/", handleAppshellLike)
 
+	// 8080 in bridge compose; 18080 when upstream uses host networking with nginx-host.conf.
 	addr := ":8080"
+	if p := os.Getenv("LISTEN_ADDR"); p != "" {
+		addr = p
+	}
 	log.Printf("upstream listening on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, mux))
 }
@@ -59,6 +65,25 @@ func handleChunked(w http.ResponseWriter, r *http.Request) {
 		flusher.Flush()
 		time.Sleep(40 * time.Millisecond)
 	}
+}
+
+// handleAppshellLike approximates www-web GET / via openresty → app-shell (see fixtures/curl-get-root.sanitized.txt).
+func handleAppshellLike(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Vary", "Accept-Encoding")
+	w.Header().Set("accept-ch", "Sec-CH-Viewport-Width")
+	w.Header().Set("critical-ch", "Sec-CH-Viewport-Width")
+	w.Header().Set("x-middleware-rewrite", "/")
+	w.Header().Set("Cache-Control", "private, no-cache, no-store, max-age=0, must-revalidate")
+	w.Header().Set("ETag", `"repro-3578"`)
+	http.SetCookie(w, &http.Cookie{Name: "ptv_jwt_refresh", Value: "28800", Path: "/", SameSite: http.SameSiteLaxMode})
+	http.SetCookie(w, &http.Cookie{Name: "ptv_session_id", Value: "repro-session", Path: "/", SameSite: http.SameSiteLaxMode})
+	bodyKB, _ := strconv.Atoi(r.URL.Query().Get("kb"))
+	if bodyKB <= 0 {
+		bodyKB = 392 // ~401965 bytes HTML payload observed on dev www-web
+	}
+	pad := strings.Repeat("x", bodyKB*1024)
+	_, _ = fmt.Fprintf(w, "<!DOCTYPE html><html><head><title>repro</title></head><body>%s</body></html>", pad)
 }
 
 func handleHTML(w http.ResponseWriter, r *http.Request) {

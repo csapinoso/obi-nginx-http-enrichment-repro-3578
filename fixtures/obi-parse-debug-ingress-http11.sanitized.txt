@@ -1,0 +1,3 @@
+# Sample from gcp-dev-use1 after HTTPS ingress burst (--http1.1) to www-web-pluto-us-test-www.gcp-dev-use1.pluto.tv
+# Pod: otel-obi-gr9rg (stock OBI v0.11.0, log_level=debug). respErr class matches #3578 (response-side parse).
+time=2026-10-02T19:58:35.417Z level=DEBUG msg="error while parsing http request or response, falling back to manual HTTP info parsing" reqErr=<nil> respErr="malformed MIME header: missing colon: \"00550\""

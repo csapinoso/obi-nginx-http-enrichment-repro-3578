@@ -1,0 +1,30 @@
+# Linux Docker: instrument all nginx processes in the VM (OBI nginx example pattern).
+# Use: docker compose -f docker-compose.yml -f docker-compose.hostpid.yml up
+services:
+  obi:
+    pid: host
+    network_mode: host
+    depends_on:
+      - nginx
+      - otel-collector
+    environment:
+      OTEL_EBPF_CONFIG_PATH: /config/obi-config-hostpid.yml
+    volumes:
+      - ./obi-config-hostpid.yml:/config/obi-config-hostpid.yml:ro
+
+  nginx:
+    ports: []
+    network_mode: host
+    volumes:
+      - ./nginx-host.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/proxy-buffers.conf:/etc/nginx/proxy-buffers.conf:ro
+
+  upstream:
+    network_mode: host
+    environment:
+      LISTEN_ADDR: ":18080"
+
+  otel-collector:
+    ports:
+      - "4317:4317"
+    network_mode: host

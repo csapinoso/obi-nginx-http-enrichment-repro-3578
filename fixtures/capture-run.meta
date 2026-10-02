@@ -1,0 +1,13 @@
+# Frozen capture window (gcp-dev-use1 / pluto-us-test-www) — 2026-10-02
+# OBI: stock ebpf-instrument:v0.11.0 + log_level=debug (GitOps probe; reverted after capture)
+capture_window_utc=2026-10-02T19:48:00Z..2026-10-02T20:05:00Z
+context=gcp-dev-use1
+www_namespace=pluto-us-test-www
+obi_namespace=opentelemetry-ebpf-system
+ingress_host=www-web-pluto-us-test-www.gcp-dev-use1.pluto.tv
+www_web_stack=openresty reverse proxy -> app-shell (~402KiB HTML on GET /)
+proxy_buffers=16k x 16 (Terranova proxy-buffers-conf)
+fallback_sample_pod=otel-obi-gr9rg
+fallback_lines_cluster=see obi-parse-debug-cluster.sanitized.txt
+grep_note=co-located otel-obi on www-web node often 0 lines; use cluster-wide grep after ingress --http1.1 burst
+regenerate=./scripts/capture-from-dev.sh (requires temporary stock v0.11.0 + debug on dev)

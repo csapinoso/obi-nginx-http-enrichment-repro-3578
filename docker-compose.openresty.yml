@@ -1,0 +1,4 @@
+# Closer to www-web (openresty). Combine with base compose and optionally hostpid on Linux.
+services:
+  nginx:
+    image: openresty/openresty:1.25.3.2-alpine
