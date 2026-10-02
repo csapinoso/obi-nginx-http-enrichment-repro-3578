@@ -1,0 +1,28 @@
+# Linux sign-off stack: openresty + Terranova proxy buffers + host pid/network (OBI nginx example pattern).
+services:
+  upstream:
+    network_mode: host
+    environment:
+      LISTEN_ADDR: ":18080"
+
+  nginx:
+    image: openresty/openresty:1.25.3.2-alpine
+    pid: host
+    ports: []
+    network_mode: host
+    volumes:
+      - ./nginx-host.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./nginx/proxy-buffers-terranova.conf:/etc/nginx/proxy-buffers.conf:ro
+
+  otel-collector:
+    network_mode: host
+    ports:
+      - "4317:4317"
+
+  obi:
+    pid: host
+    network_mode: host
+    environment:
+      OTEL_EBPF_CONFIG_PATH: /config/obi-config-hostpid.yml
+    volumes:
+      - ./obi-config-hostpid.yml:/config/obi-config-hostpid.yml:ro

@@ -10,7 +10,7 @@ Maintainer request: **docker-compose**, **HTTP/1.1**, and a script that triggers
 
 **Dev capture (#1):** [scripts/capture-from-dev.sh](./scripts/capture-from-dev.sh) → [fixtures/](./fixtures/README.md). Offline check: `./scripts/verify-fixtures-package.sh`.
 
-**Linux repro (#2):** on Linux, `run-repro.sh` uses **openresty + hostpid** overlays; CI: [`.github/workflows/repro-3578.yml`](./.github/workflows/repro-3578.yml). Details: [docs/LINUX_REPRO_OPTIONS.md](./docs/LINUX_REPRO_OPTIONS.md).
+**Linux repro (#2):** sign-off stack: `COMPOSE_FILES="-f docker-compose.yml -f docker-compose.signoff.yml" REQUIRE_EBPF_FALLBACK=1 ./run-repro.sh`. CI: [`.github/workflows/repro-3578.yml`](./.github/workflows/repro-3578.yml). Details: [docs/LINUX_REPRO_OPTIONS.md](./docs/LINUX_REPRO_OPTIONS.md).
 
 ## Requirements
 

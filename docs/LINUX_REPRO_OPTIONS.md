@@ -18,7 +18,8 @@ Mac Docker Desktop is **not** the sign-off host.
 **Status:** Implemented — `.github/workflows/repro-3578.yml`
 
 - Job `parser-and-fixtures`: `go run ./cmd/parse-buffer-lab`, `./scripts/verify-fixtures-package.sh`
-- Job `ebpf-compose-linux`: `REQUIRE_EBPF_FALLBACK=1 ./run-repro.sh` (auto **openresty + hostpid** on Linux)
+- Job `ebpf-compose-smoke`: bridge openresty sidecar
+- Job `ebpf-repro-signoff`: `docker-compose.signoff.yml` (openresty + Terranova buffers + host pid/network) + `scripts/traffic-burst.sh`
 
 **Pros:** Repeatable, shareable link for mmat11, no laptop OS dependency.  
 **Cons:** First green run may need further compose tweaks; expect red until fallback matches cluster.

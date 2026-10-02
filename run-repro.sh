@@ -91,17 +91,22 @@ EXTRA_ROUTES=(
 
 echo "==> Generating traffic (Authorization on every request)"
 export AUTH_TOKEN="$AUTH"
-for url in "${PRIMARY_ROUTES[@]}"; do
-  bash "$ROOT/scripts/traffic.sh" "$url" 24
-  sleep 2
-done
-if [[ "$REQUIRE_EBPF_FALLBACK" != "1" ]]; then
+BURST_COUNT="${REPRO_BURST_COUNT:-40}"
+if [[ "$REQUIRE_EBPF_FALLBACK" == "1" ]] || [[ "${REPRO_INGRESS_BURST:-0}" == "1" ]]; then
+  echo "    mode: ingress-like HTTP/1.1 burst (count=${BURST_COUNT})"
+  bash "$ROOT/scripts/traffic-burst.sh" "http://127.0.0.1:8080/" "$BURST_COUNT"
+  bash "$ROOT/scripts/traffic-burst.sh" "http://127.0.0.1:8080/appshell-like" "$((BURST_COUNT / 2))"
+else
+  for url in "${PRIMARY_ROUTES[@]}"; do
+    bash "$ROOT/scripts/traffic.sh" "$url" 24
+    sleep 2
+  done
   for url in "${EXTRA_ROUTES[@]}"; do
     bash "$ROOT/scripts/traffic.sh" "$url" 12
     sleep 2
   done
 fi
-sleep 12
+sleep 15
 
 OBI_LOGS=$("${COMPOSE_ARGS[@]}" logs obi 2>&1 || true)
 COLL_LOGS=$("${COMPOSE_ARGS[@]}" logs otel-collector 2>&1 || true)

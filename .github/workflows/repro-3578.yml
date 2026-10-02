@@ -50,7 +50,8 @@ jobs:
         env:
           REQUIRE_EBPF_FALLBACK: "1"
           KEEP_COMPOSE_ON_FAILURE: "1"
-          COMPOSE_FILES: "-f docker-compose.yml -f docker-compose.openresty.yml -f docker-compose.terranova-buffers.yml"
+          COMPOSE_FILES: "-f docker-compose.yml -f docker-compose.signoff.yml"
+          REPRO_BURST_COUNT: "48"
         run: ./run-repro.sh
       - name: Sign-off summary
         if: always()
@@ -75,7 +76,7 @@ jobs:
         if: failure()
         run: |
           mkdir -p ci-logs
-          DC="docker compose -f docker-compose.yml -f docker-compose.openresty.yml -f docker-compose.terranova-buffers.yml"
+          DC="docker compose -f docker-compose.yml -f docker-compose.signoff.yml"
           $DC logs > ci-logs/compose.log 2>&1 || true
           $DC logs obi 2>&1 | tail -200 > ci-logs/obi-tail.log || true
       - name: Upload CI logs
@@ -88,4 +89,4 @@ jobs:
       - name: Tear down compose
         if: always()
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.openresty.yml -f docker-compose.terranova-buffers.yml down -v || true
+          docker compose -f docker-compose.yml -f docker-compose.signoff.yml down -v || true
