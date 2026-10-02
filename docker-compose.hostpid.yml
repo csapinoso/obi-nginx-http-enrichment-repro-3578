@@ -17,6 +17,7 @@ services:
     ports: []
     network_mode: host
     volumes:
+      - ./nginx-host.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
       - ./nginx-host.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/proxy-buffers.conf:/etc/nginx/proxy-buffers.conf:ro
 

@@ -1,4 +1,7 @@
-# Closer to www-web (openresty). Combine with base compose and optionally hostpid on Linux.
+# www-web uses openresty; config path differs from nginx:alpine.
 services:
   nginx:
     image: openresty/openresty:1.25.3.2-alpine
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./nginx/proxy-buffers.conf:/etc/nginx/proxy-buffers.conf:ro
