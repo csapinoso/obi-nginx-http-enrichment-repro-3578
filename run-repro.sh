@@ -15,7 +15,11 @@ echo ""
 COMPOSE="${COMPOSE:-docker compose}"
 if [[ -z "${COMPOSE_FILES:-}" ]]; then
   if [[ "$(uname -s)" == Linux ]]; then
-    COMPOSE_FILES="-f docker-compose.yml -f docker-compose.openresty.yml -f docker-compose.hostpid.yml"
+    # Bridge + openresty sidecar works on GHA; hostpid overlay is opt-in (REPRO_USE_HOSTPID=1).
+    COMPOSE_FILES="-f docker-compose.yml -f docker-compose.openresty.yml"
+    if [[ "${REPRO_USE_HOSTPID:-0}" == "1" ]]; then
+      COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.hostpid.yml"
+    fi
   else
     COMPOSE_FILES="-f docker-compose.yml"
   fi
@@ -51,12 +55,12 @@ for _ in $(seq 1 45); do
   sleep 1
 done
 
-echo "==> Waiting for OBI to attach to nginx"
+echo "==> Waiting for OBI to attach to nginx/openresty"
 ready=0
 for _ in $(seq 1 90); do
   logs=$("${COMPOSE_ARGS[@]}" logs obi 2>&1 || true)
-  if printf '%s\n' "$logs" | grep -q 'instrumenting process' \
-    && printf '%s\n' "$logs" | grep -q 'Enabling trace information parsing'; then
+  if grep -qE 'instrumenting process|Instrumenting process' <<< "$logs" \
+    && grep -q 'Enabling trace information parsing' <<< "$logs"; then
     ready=1
     break
   fi

@@ -13,6 +13,7 @@ services:
       - ./obi-config-hostpid.yml:/config/obi-config-hostpid.yml:ro
 
   nginx:
+    pid: host
     ports: []
     network_mode: host
     volumes:
