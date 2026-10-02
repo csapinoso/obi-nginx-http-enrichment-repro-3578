@@ -1,0 +1,43 @@
+# Minimal nginx reverse-proxy repro for opentelemetry-ebpf-instrumentation#3578.
+# HTTP/1.1 only. OBI v0.11.0 sidecar instruments nginx (generic/cpp path).
+services:
+  upstream:
+    build: ./upstream
+    expose:
+      - "8080"
+
+  nginx:
+    image: nginx:1.26-alpine
+    depends_on:
+      - upstream
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.109.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    expose:
+      - "4317"
+
+  obi:
+    image: ghcr.io/open-telemetry/opentelemetry-ebpf-instrumentation/ebpf-instrument:v0.11.0
+    privileged: true
+    pid: "service:nginx"
+    depends_on:
+      - nginx
+      - otel-collector
+    environment:
+      OTEL_EBPF_CONFIG_PATH: /config/obi-config.yml
+    volumes:
+      - ./obi-config.yml:/config/obi-config.yml:ro
+      - /sys/fs/bpf:/sys/fs/bpf
+    cap_add:
+      - BPF
+      - SYS_ADMIN
+      - SYS_PTRACE
+      - NET_ADMIN
+      - PERFMON

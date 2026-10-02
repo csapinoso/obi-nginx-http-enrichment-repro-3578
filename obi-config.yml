@@ -1,0 +1,40 @@
+log_level: debug
+metrics:
+  features: [application]
+prometheus_export:
+  port: 0
+otel_metrics_export:
+  endpoint: ""
+otel_traces_export:
+  endpoint: http://otel-collector:4317
+  instrumentations:
+    - http
+discovery:
+  exclude_otel_instrumented_services: false
+  instrument:
+    - exe_path: "*nginx*"
+  exclude_instrument:
+    - exe_path: "*ebpf-instrument*"
+    - exe_path: "*otelcol*"
+network:
+  enable: false
+ebpf:
+  context_propagation: all
+  track_request_headers: true
+  buffer_sizes:
+    http: 8192
+  payload_extraction:
+    http:
+      enrichment:
+        enabled: true
+        policy:
+          default_action:
+            headers: exclude
+            body: exclude
+        rules:
+          - action: include
+            type: headers
+            scope: request
+            match:
+              patterns: [authorization]
+              case_sensitive: false
