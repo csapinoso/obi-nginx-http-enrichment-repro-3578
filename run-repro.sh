@@ -47,13 +47,20 @@ echo "==> Compose: ${COMPOSE_ARGS[*]}"
 echo "==> Starting stack"
 "${COMPOSE_ARGS[@]}" up --build -d
 
-echo "==> Waiting for nginx"
-for _ in $(seq 1 45); do
+echo "==> Waiting for nginx/openresty"
+nginx_ready=0
+for _ in $(seq 1 60); do
   if curl -sf http://127.0.0.1:8080/small >/dev/null 2>&1; then
+    nginx_ready=1
     break
   fi
   sleep 1
 done
+if [[ "$nginx_ready" -ne 1 ]]; then
+  echo "FAIL: reverse proxy not reachable on :8080/small" >&2
+  "${COMPOSE_ARGS[@]}" logs nginx | tail -60
+  exit 1
+fi
 
 echo "==> Waiting for OBI to attach to nginx/openresty"
 ready=0

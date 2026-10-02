@@ -7,6 +7,7 @@ COUNT="${2:-15}"
 TOKEN="${AUTH_TOKEN:-repro-$(date +%s)}"
 
 for _ in $(seq 1 "$COUNT"); do
-  curl -sS -o /dev/null -H "Authorization: Bearer ${TOKEN}" "${BASE_URL}"
+  curl -sS --retry 2 --retry-delay 1 --max-time 120 -o /dev/null \
+    -H "Authorization: Bearer ${TOKEN}" "${BASE_URL}" || exit 1
 done
 echo "sent ${COUNT} requests to ${BASE_URL} (Authorization: Bearer ${TOKEN})"
