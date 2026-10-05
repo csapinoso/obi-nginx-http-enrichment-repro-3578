@@ -1,0 +1,4 @@
+# Use agent built by ./scripts/build-local-obi.sh (not stock ghcr v0.11.0).
+services:
+  obi:
+    image: ${OBI_LOCAL_IMAGE:-obi-pro-11748:local}

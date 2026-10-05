@@ -75,7 +75,7 @@ fi
 
 echo "==> OBI parse-path (cluster-wide, last 8m)"
 kubectl --context "$CONTEXT" -n "$OBI_NS" logs -l app.kubernetes.io/name=obi --since=8m --max-log-requests=50 2>&1 \
-  | grep -iE 'missing large buffer|falling back|error while parsing' \
+  | grep -iE 'missing large buffer|falling back|error while parsing|HTTP response large buffer shape' \
   | sed -E 's/respErr="[^"]{0,220}.*/respErr="<redacted>"/' \
   | tee "$FIXTURE_DIR/obi-parse-debug-cluster.sanitized.txt" | head -20
 
