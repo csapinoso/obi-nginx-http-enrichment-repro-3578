@@ -36,6 +36,11 @@ func main() {
 	parseResponse("cluster-B_body_byte_as_header", []byte("HTTP/1.1 200 OK\r\nContent-Length: 1\r\n0"))
 	parseResponse("cluster-B_variant_header_line_0", []byte("HTTP/1.1 200 OK\r\n0\r\nContent-Length: 0\r\n\r\n"))
 
+	// Truncated header block: parser still in headers; next line is body-ish (cluster "00550" class).
+	parseResponse("cluster-C_truncated_headers_body_line", []byte(
+		"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nSet-Cookie: a=b\r\n00550",
+	))
+
 	// Valid baseline (enrichment path can run when both req+resp parse).
 	parseResponse("valid_small_json", []byte("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 2\r\n\r\n{}"))
 }
