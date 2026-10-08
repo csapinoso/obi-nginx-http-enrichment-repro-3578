@@ -1,0 +1,12 @@
+{
+  "description": "Sanitized shape probe from Datadog dev capture (PRO-11748 / #3578).",
+  "records": [
+    {
+      "id": "datadog-dev-2026-10-08-malformed-http-status",
+      "respErr": "malformed HTTP status code \"HTTP/1.x\"",
+      "responseBufferLen": 58,
+      "startsWithHTTP": false,
+      "head64Hex": "0000310700000000007fffffff00000001556e657870656374656420485454502f312e7820726571756573743a20474554202f6865616c746820"
+    }
+  ]
+}

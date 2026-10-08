@@ -9,8 +9,12 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func parseResponse(label string, raw []byte) {
@@ -24,9 +28,43 @@ func parseResponse(label string, raw []byte) {
 	fmt.Printf("UNEXPECTED %s: parse succeeded\n", label)
 }
 
+type fixtureFile struct {
+	Records []struct {
+		ID        string `json:"id"`
+		Head64Hex string `json:"head64Hex"`
+		RespErr   string `json:"respErr"`
+	} `json:"records"`
+}
+
+func loadDatadogFixture() {
+	path := filepath.Join("fixtures", "datadog-shape-2026-10-08.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Printf("skip fixture %s: %v\n", path, err)
+		return
+	}
+	var ff fixtureFile
+	if err := json.Unmarshal(data, &ff); err != nil {
+		fmt.Printf("skip fixture %s: %v\n", path, err)
+		return
+	}
+	for _, rec := range ff.Records {
+		raw, err := hex.DecodeString(rec.Head64Hex)
+		if err != nil {
+			fmt.Printf("skip %s: bad hex: %v\n", rec.ID, err)
+			continue
+		}
+		fmt.Printf("--- fixture %s (expected respErr class: %q)\n", rec.ID, rec.RespErr)
+		parseResponse(rec.ID, raw)
+		fmt.Println()
+	}
+}
+
 func main() {
 	fmt.Println("=== Response buffers that fail http.ReadResponse (same helper as OBI httpSafeParseResponse) ===")
 	fmt.Println()
+
+	loadDatadogFixture()
 
 	// Sanitized cluster DEBUG (2026-10-01):
 	// respErr="malformed MIME header line: \" \""
